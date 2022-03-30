@@ -1773,6 +1773,7 @@ async def play_error(ctx, error):
   await ctx.message.add_reaction('🎧')
   if isinstance(error, commands.CommandInvokeError):
     await ctx.reply(f'Add me to a voice channel by typing `{get_prefix(client, ctx.message)}join`.')
+    raise error
   elif isinstance(error, commands.MissingRequiredArgument):
     voice = get(client.voice_clients, guild=ctx.guild)
     if voice == None:
