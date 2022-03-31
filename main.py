@@ -2153,6 +2153,7 @@ async def playlist(ctx, arg1, *, arg2):
   if arg1 == 'add' and yeno == None:
     try:
       results = YoutubeSearch(arg2, max_results=10).to_dict()
+      print(results)
       a = results[0]
     except:
       await ctx.reply('I could not find any tracks with the specified keywords.')
