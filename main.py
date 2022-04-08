@@ -1255,19 +1255,25 @@ async def Search(ctx, *, arg1):
       mothertext = await ctx.reply(f'<@{ctx.author.id}> Searching for answers...')
       embeds = []
       try:
+        await mothertext.edit(content='Sending query to Wolfram Alpha...')
         answerone = await great_wolfram(arg1, '@src')
         embeds.append(answerone)
       except:
+        await mothertext.edit(content='Wolfram Alpha failed, crawling Wikipedia...')
         pass
       try:
+        await mothertext.edit(content='Searching Wikipedia...')
         answertwo = await wikisearch_two(arg1)
         embeds.append(answertwo)
       except:
+        await mothertext.edit(content='Wikipedia failed, resorting to Google search results...')
         pass
       try:
+        await mothertext.edit(content='Scraping Google search results...')
         answerthree = await google(arg1)
         embeds.append(answerthree)
       except:
+        await mothertext.edit(content='All sources failed')
         pass
       await mothertext.delete()
 
@@ -1390,6 +1396,7 @@ async def Mediaban(ctx, person: discord.Member):
     d.insert_one({"_id": str(person.id)})
     await ctx.reply(f'{person.name} is now banned from sending any videos and GIFs.')
   else:
+    d = mydb["banned"]
     d.delete_one({"_id": str(person.id)})
     await ctx.reply(f'{person.name} has been unbanned from sending media')
 
