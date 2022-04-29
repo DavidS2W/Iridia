@@ -1633,8 +1633,10 @@ async def pplay(ctx, data):
           await ctx.send(f'I could not retrieve the audio tracks for `{item["title"]}` :(')
           await tempremove(str(ctx.guild.id), item)
           pass
+  await loopa_two(ctx)
 
 loop_servers = []
+loop_queue_servers = []
 
 async def loopa(ctx, data, voice):
   if str(ctx.guild.id) in loop_servers:
@@ -1649,6 +1651,27 @@ async def loopa(ctx, data, voice):
         audio = FFmpegPCMAudio(URL, **FFMPEG_OPTIONS)
         voice.play(audio)
         await asyncio.sleep(prettytime(data["duration"])+1)
+  else:
+    pass
+
+async def loopa_two(ctx):
+  if str(ctx.guild.id) in loop_queue_servers:
+    with open('songlist.json', 'r') as f:
+      b = json.load(f)
+    if len(b[str(ctx.guild.id)]) != 0:
+      pass
+    else:
+      with open('songdict.json', 'r') as f:
+        bc= json.load(f)
+      for item in bc[str(ctx.guild.id)]:
+        als = b[str(ctx.guild.id)]
+        als.append(item)
+      with open('songlist.json', 'w') as f:
+        json.dump(b, f, indent=4)
+      with open('songlist.json', 'r') as f:
+        d = json.load(f)
+        
+      await pplay(ctx, d[str(ctx.guild.id)][0])
   else:
     pass
 
@@ -1759,6 +1782,7 @@ async def play(ctx, *, arg1):
                 await ctx.reply(f'I could not retrieve the audio tracks for `{item["title"]}` :(')
                 await tempremove(str(ctx.guild.id), item)
                 pass
+        await loopa_two(ctx)
   else:
     try:
       results = YoutubeSearch(arg1, max_results=10).to_dict()
