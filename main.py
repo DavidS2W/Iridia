@@ -1327,6 +1327,7 @@ async def Updates(ctx):
   embedVar.add_field(name="Tidied up the help command", value="The help command now shows usage directions more clearly.", inline=False)
   embedVar.add_field(name="More stable hosting", value="Iridia will be migrated to Heroku and MongoDB, reducing outages and latency.", inline=False)
   embedVar.add_field(name="Small UI fixes and improvements", value="A few commands now have incremental but significant UI improvements.", inline=False)
+  embedVar.add_field(name="Added a feature to loop queues in the music player", value=f"{get_prefix(client, ctx.message)}loop queue", inline=False)
   embedVar.set_thumbnail(url=client.user.avatar_url)
   await ctx.reply(embed=embedVar)
 
@@ -1458,6 +1459,66 @@ async def Roles_error(ctx, error):
     await ctx.reply(embed=rolese)
   else:
     await ctx.reply('I could not find the member you were specifying!')
+    
+@client.command(aliases=['books', 'book']
+async def Book(ctx, arg1):
+    url = "https://books17.p.rapidapi.com/works/title"
+
+    payload = {
+	  "cursor": 1,
+	  "title": arg1,
+	  "subtitle": False
+    }
+    headers = {
+	  "content-type": "application/json",
+	  "X-RapidAPI-Host": "books17.p.rapidapi.com",
+	  "X-RapidAPI-Key":     "7d9e769d83msh9cd7cee36149641p110f63jsn1edd3c89f7c2"
+    }
+
+    response = requests.request("POST", url, json=payload, headers=headers)
+
+    br = response.json()
+    templist = []
+    templist_two = []
+    for item in br["data"]:
+      if item["description"] != None:
+        templist.append(item)
+      else:
+        pass
+
+    if len(templist) != 0:
+      
+      v = templist[0]
+      btitle = v["title"]
+      desc = v["description"]
+      
+      em = discord.Embed(title=btitle, description=desc, color=random.choice(colors))
+      prettyprint = btitle.replace(' ', '+')
+      em.add_field(name='Link', value=f'https://www.google.com/search?tbm=bks&q={prettyprint.lower()}', inline=False)
+      await ctx.reply(embed=em)
+    else:
+      if len(br["data"]) == 0:
+        await ctx.reply('I could not find any books with the specified title')
+        return
+      else:
+        pass
+      for item in br["data"]:
+        templist_two.append(item["title"])
+      templist_two = list(dict.fromkeys(templist_two))
+      em = discord.Embed()
+      em.color = random.choice(colors)
+      em.title=f'Books with the title {a[1]}'
+      for item in templist_two:
+        prettyprint = item.replace(' ', '+')
+        print(item)
+        em.add_field(name=f'{templist_two.index(item)+1}. {item}', value=f'[Click here](https://www.google.com/search?tbm=bks&q={prettyprint})', inline=False)
+      await ctx.reply(embed=em)
+                
+@Book.error
+async def Book_error(ctx, error):
+  if isinstance(error, commands.MissingRequiredArgument):
+    await ctx.reply(f'Please specify the title of the book you want information for.\nExample: {get_prefix(client, ctx.message)}book Project Hail Mary')
+  
 
 def prettytime(original):
   templist = original.split(":")
@@ -2295,7 +2356,7 @@ async def Help(ctx):
 
   embed3 = discord.Embed(title="Commands to access tools", description="Access essential tools with these commands!", color=random.choice(colors)).set_thumbnail(url=client.user.avatar_url).set_footer(icon_url=mypic, text=f'Bot created by {myname}').add_field(name="Ask the 8ball", value=f"`{get_prefix(client, ctx.message)}8ball`", inline=False).add_field(name="Flip a coin", value=f"`{get_prefix(client, ctx.message)}flip`", inline=False).add_field(name="Get a random number between 0 and a specified positive integer.", value=f"`{get_prefix(client, ctx.message)}random <min> <max>`", inline=False).add_field(name="Create a minute long poll in the chat", value=f"`{get_prefix(client, ctx.message)}vote <poll topic>`", inline=False).add_field(name="See your avatar or someone else's", value=f"`{get_prefix(client, ctx.message)}avatar <@someone>` or `{get_prefix(client, ctx.message)}avatar`", inline=False).add_field(name="Let Iridia choose something from a range of options", value=f"`{get_prefix(client, ctx.message)}choose <option1>,<option2>...`", inline=False).add_field(name="Find out how high the latency is", value=f"`{get_prefix(client, ctx.message)}ping`", inline=False).add_field(name="Get current time around the world", value=f'`{get_prefix(client, ctx.message)}clock` or `{get_prefix(client, ctx.message)}clock <city name>`', inline=False).add_field(name="Generate a story with AI and Natural Language Processing", value=f'`{get_prefix(client, ctx.message)}prompt <text>`', inline=False)
 
-  embed4 = discord.Embed(title="Commands to access productivity features", description="Be productive with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="View COVID-19 cases around the globe", value=f"`{get_prefix(client, ctx.message)}covid <country name>`", inline=False).add_field(name="Search for some information from the internet", value=f"`{get_prefix(client, ctx.message)}search <query>`", inline=False).add_field(name="Inspirational Quotes", value=f"`{get_prefix(client, ctx.message)}inspire`", inline=False).add_field(name="Get weather stats for a specific place", value=f"`{get_prefix(client, ctx.message)}weather <name of place>`", inline=False).add_field(name='Translate text to a specified language', value=f'`{get_prefix(client, ctx.message)}translate <language> <text to translate>`', inline=False).add_field(name="Set a timer", value=f"`{get_prefix(client, ctx.message)}timer <number> <time unit>`", inline=False).add_field(name="Calculator", value=f"`{get_prefix(client, ctx.message)}calc <maths equation>`", inline=False).add_field(name="Dictionary", value=f"`{get_prefix(client, ctx.message)}define <word>`", inline=False).add_field(name='Get an Orwellian quote', value=f'`{get_prefix(client, ctx.message)}orwell`', inline=False)
+  embed4 = discord.Embed(title="Commands to access productivity features", description="Be productive with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="View COVID-19 cases around the globe", value=f"`{get_prefix(client, ctx.message)}covid <country name>`", inline=False).add_field(name="Search for some information from the internet", value=f"`{get_prefix(client, ctx.message)}search <query>`", inline=False).add_field(name="Inspirational Quotes", value=f"`{get_prefix(client, ctx.message)}inspire`", inline=False).add_field(name="Get weather stats for a specific place", value=f"`{get_prefix(client, ctx.message)}weather <name of place>`", inline=False).add_field(name='Translate text to a specified language', value=f'`{get_prefix(client, ctx.message)}translate <language> <text to translate>`', inline=False).add_field(name="Set a timer", value=f"`{get_prefix(client, ctx.message)}timer <number> <time unit>`", inline=False).add_field(name="Calculator", value=f"`{get_prefix(client, ctx.message)}calc <maths equation>`", inline=False).add_field(name="Dictionary", value=f"`{get_prefix(client, ctx.message)}define <word>`", inline=False).add_field(name='Get an Orwellian quote', value=f'`{get_prefix(client, ctx.message)}orwell`', inline=False).add_field(name="Get book information", value="`{get_prefix(client, ctx.message)}book <book title>`", inline=False)
   
   embed7 = discord.Embed(title="Commands to access bot info", description="Know bot information with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Default prefix", value='i', inline=False).add_field(name="Get an invite link for Iridia", value=f"`{get_prefix(client, ctx.message)}invite`", inline=False).add_field(name="View recent updates", value=f"`{get_prefix(client, ctx.message)}updates`", inline=False).add_field(name="View bot info", value=f"`{get_prefix(client, ctx.message)}bot`", inline=False)
 
@@ -2305,7 +2366,7 @@ async def Help(ctx):
 
   embed9 = discord.Embed(title="Music commands 1", description="Vibe to your favourite tunes with Radia Music!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name= 'Join a voice channel',value = f'`{get_prefix(client, ctx.message)}join`', inline=False).add_field(name= 'Leave a voice channel',value = f'`{get_prefix(client, ctx.message)}leave`', inline=False).add_field(name= 'Play a specified song using the YouTube API. If no song is specified, I will play the server queue.',value = f'`{get_prefix(client, ctx.message)}play <song name>` or `{get_prefix(client, ctx.message)}play`', inline=False).add_field(name= 'Show the song being currently played.',value = f'`{get_prefix(client, ctx.message)}np`', inline=False).add_field(name= 'Skip to the next song in the queue',value = f'`{get_prefix(client, ctx.message)}skip`', inline=False).add_field(name= 'Get the lyrics of a song. If no song is specified, I will fetch the lyrics of the song being played.',value = f'`{get_prefix(client, ctx.message)}lyrics <song name>` or `{get_prefix(client, ctx.message)}lyrics`', inline=False).add_field(name= 'Pause the player',value = f'`{get_prefix(client, ctx.message)}pause`', inline=False).add_field(name= 'Resume the paused player',value = f'`{get_prefix(client, ctx.message)}resume`', inline=False)
 
-  embed10 = discord.Embed(title="Music commands 2", description="Vibe to your favourite tunes with Radia Music!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name= 'Show the server queue',value = f'`{get_prefix(client, ctx.message)}queue`', inline=False).add_field(name= 'Clear the server queue',value = f'`{get_prefix(client, ctx.message)}empty`', inline=False).add_field(name= 'Remove a song from the queue',value = f'`{get_prefix(client, ctx.message)}remove <index of song in queue>`', inline=False).add_field(name= 'Loop the song being played',value = f'`{get_prefix(client, ctx.message)}loop`', inline=False).add_field(name= 'Change the volume of the player',value = f'`{get_prefix(client, ctx.message)}volume <volume number>`', inline=False).add_field(name= 'View your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist view`', inline=False).add_field(name= 'Add songs to your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist add <song name>`', inline=False).add_field(name= 'Remove a song from your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist remove <index of song>`', inline=False).add_field(name= 'Add your personal playlist to the server queue',value = f'`{get_prefix(client, ctx.message)}playlist play`', inline=False)
+  embed10 = discord.Embed(title="Music commands 2", description="Vibe to your favourite tunes with Radia Music!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name= 'Show the server queue',value = f'`{get_prefix(client, ctx.message)}queue`', inline=False).add_field(name= 'Clear the server queue',value = f'`{get_prefix(client, ctx.message)}empty`', inline=False).add_field(name= 'Remove a song from the queue',value = f'`{get_prefix(client, ctx.message)}remove <index of song in queue>`', inline=False).add_field(name= 'Loop the song being played or the queue',value = f'For song: `{get_prefix(client, ctx.message)}loop`\nFor queue: `{get_prefix(client, ctx.message)}loop queue`', inline=False).add_field(name= 'Change the volume of the player',value = f'`{get_prefix(client, ctx.message)}volume <volume number>`', inline=False).add_field(name= 'View your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist view`', inline=False).add_field(name= 'Add songs to your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist add <song name>`', inline=False).add_field(name= 'Remove a song from your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist remove <index of song>`', inline=False).add_field(name= 'Add your personal playlist to the server queue',value = f'`{get_prefix(client, ctx.message)}playlist play`', inline=False)
   
   embeds = [embed1, embed2, embed3, embed4, embed5, embed7, embed8, embed9, embed10]
 
