@@ -1460,7 +1460,7 @@ async def Roles_error(ctx, error):
   else:
     await ctx.reply('I could not find the member you were specifying!')
     
-@client.command(aliases=['books', 'book']
+@client.command(aliases=['books', 'book'])
 async def Book(ctx, arg1):
     url = "https://books17.p.rapidapi.com/works/title"
 
