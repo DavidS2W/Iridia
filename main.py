@@ -1461,7 +1461,7 @@ async def Roles_error(ctx, error):
     await ctx.reply('I could not find the member you were specifying!')
     
 @client.command(aliases=['books', 'book'])
-async def Book(ctx, arg1):
+async def Book(ctx, *, arg1):
     url = "https://books17.p.rapidapi.com/works/title"
 
     payload = {
@@ -2057,30 +2057,38 @@ async def remove_error(ctx, error):
     await ctx.reply('Please specify the index of the song you intend to delete.\nExample: `r.remove 2`')
 
 @client.command()
-async def loop(ctx):
+async def loop(ctx, *, arg1=None):
   await ctx.message.add_reaction('🔁')
   voice = get(client.voice_clients, guild=ctx.guild)
   if voice.is_playing():
-    if str(ctx.guild.id) not in loop_servers:
-      with open('songlist.json', 'r') as f:
-        d = json.load(f)
-      a = d[str(ctx.guild.id)]
-      loop_servers.append(str(ctx.guild.id))
-      await ctx.reply(f'Now looping `{a[0]["title"]}.`')
+    if arg1.lower() == None or arg1.lower() != 'queue':
+      if str(ctx.guild.id) not in loop_servers:
+        with open('songlist.json', 'r') as f:
+          d = json.load(f)
+        a = d[str(ctx.guild.id)]
+        loop_servers.append(str(ctx.guild.id))
+        await ctx.send(f'Now looping `{a[0]["title"]}.`')
+      else:
+        loop_servers.remove(str(ctx.guild.id))
+        with open('songlist.json', 'r') as f:
+          d = json.load(f)
+        a = d[str(ctx.guild.id)]
+        await ctx.send(f'`{a[0]["title"]}` has been unlooped.')
     else:
-      loop_servers.remove(str(ctx.guild.id))
-      with open('songlist.json', 'r') as f:
-        d = json.load(f)
-      a = d[str(ctx.guild.id)]
-      await ctx.reply(f'`{a[0]["title"]}` has been unlooped.')
+      if str(ctx.guild.id) in loop_queue_servers:
+        loop_queue_servers.remove(str(ctx.guild.id))
+        await ctx.send('You have unlooped the server queue')
+      else:
+        loop_queue_servers.append(str(ctx.guild.id))
+        await ctx.send('You are now looping the server queue.')
   else:
-    await ctx.reply('You are currently not playing anything.')
+    await ctx.send('You are currently not playing anything.')
 
 @loop.error
 async def loop_error(ctx, error):
   await ctx.message.add_reaction('🔁')
   if isinstance(error, commands.CommandInvokeError):
-    await ctx.reply('You are currently not playing anything.')
+    await ctx.send('You are currently not playing anything.')
 
 @client.command()
 async def empty(ctx):
