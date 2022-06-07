@@ -2508,5 +2508,13 @@ async def Chatbot(ctx):
 async def Chatbot_error(ctx, error):
   if isinstance(error, commands.CommandInvokeError):
     await ctx.send(f'Please mention a valid text channel!\nExample: {get_prefix(client, ctx.message)}chatbot #talk-to-iridia-alone')
-  
+
+@client.command()
+async def credits(ctx):
+	me = await client.fetch_user(746646972483502140)
+	jec = await client.fetch_user(650338094645772318)
+	ivan = await client.fetch_user(762190577893638184)
+	em = discord.Embed(title='Contributors in the Iridia Project', description=f"This chatbot was predominantly coded by {me.name}. A shoutout to {jec} for designing Iridia's profile picture and {ivan} for inspiring the creation of this project.", color=random.choice(colors))
+	await ctx.send(embed=em)
+	
 client.run('ODQ5ODQxMTQ2Mjg0NzM2NTEy.YLhCPg.cNEkmsxRo-1TvWVvSM2ERggmX5c')
