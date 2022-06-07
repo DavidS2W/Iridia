@@ -30,7 +30,8 @@ def get_prefix(client, message):
     get_prefix = file.find_one({"_id": message.guild.id})["prefix"]
     return get_prefix
   except:
-    print(message.guild.name)
+    chan = client.fetch_channel(789072441505742869)
+    chan.send(f'ALERT! An error has occured with the get_prefix function. Server affected: {message.guild.name}|{message.guild.id}')
 
 
 client = commands.Bot(command_prefix= get_prefix, intents=discord.Intents.all())
@@ -218,7 +219,23 @@ async def on_reaction_add(reaction, user):
   else:
     pass
 
+def kestral(message):
+  fail_words = ["Arghhh my circuits are overheating! Give me a moment!", "I feel kind of tired right now; please wait while I reboot.", "Something doesn't feel right. C-can't seem to f-form words. Why can't I just get thing-s right?"]
+  msg = message.content
+  file = mydb["chatbot_info"]
+  a = file.find_one({"_id": message.guild.id})
 
+  if a == None:
+    pass
+  else:
+    if a["channel_id"] != message.channel.id:
+      return
+    try:
+      b = requests.get(f'http://api.brainshop.ai/get?bid=166820&key=OBNt8IxFXOTDpwo7&uid={message.channel.id}&msg={msg}').json()
+      return(b["cnt"])
+    except:
+      return(random.choice(fail_words))
+      
 @client.event
 async def on_message(message):
   await client.process_commands(message)
@@ -229,7 +246,15 @@ async def on_message(message):
     if feedstock == 'https://tenor.com' or gavyn_weird_vids(message) == 1 or gavyn_weird_embeds(message) == 1:
       await message.add_reaction('❎')
     else:
-      pass
+      if message.author.id != client.user.id:
+        msgtosend = kestral(message)
+        if msgtosend != None:
+          await message.reply(msgtosend)
+  else:
+    if message.author.id != client.user.id:
+      msgtosend = kestral(message)
+      if msgtosend != None:
+        await message.reply(msgtosend)
     
 
 @client.event
@@ -1137,6 +1162,50 @@ async def Orwell(ctx):
   em.set_thumbnail(url=random.choice(orwellian_pics))
   await ctx.reply(embed=em)
 
+async def info_pullup(text):
+  text.replace(' ', '%20')
+  fail_words = ["Can't find anything related to the term you gave me.", "I have no idea what that is.", "I'm so sorry I couldn't find anything related to that!"]
+  try:
+    d = requests.get(f'https://serpapi.com/search.json?engine=google&q={text}&api_key=29bb27851f0c641dd36ac0ab9211ce0ce889f57ff33e57f038ce2799f788166e').json()
+    try:
+      try:
+        try:
+          b = d["answer_box"]["snippet"]
+          v = d["answer_box"]["list"]
+          a = '\n'.join(v)
+          em = discord.Embed(title="Here's what I found ", description=b+a, color=random.choice(colors))
+          em.add_field(name="Link", value=d["answer_box"]["link"])
+          return(em)
+        except:
+          em = discord.Embed(title="Here's what I found ", description=d["answer_box"]["snippet"], color=random.choice(colors))
+          em.add_field(name="Link", value=d["answer_box"]["link"])
+          return(em)
+      except:
+        em = discord.Embed(title="Here's what I found ", description=d["knowledge_graph"]["description"], color=random.choice(colors))
+        full_dict = list(d["knowledge_graph"])
+        full_dict.remove('description')
+        full_dict.remove('title')
+        for item in full_dict:
+          if type(d["knowledge_graph"][item]) != str:
+            full_dict.remove(item)
+        for item in full_dict:
+          try:
+            d["knowledge_graph"][item][0]
+            full_dict.remove(item)
+          except:
+            pass
+        crash_list = ["profiles", "people_also_search_for_stick"]
+        for item in full_dict:
+          if len(str(d["knowledge_graph"][item])) < 100:
+            try:
+              em.add_field(name=item, value=d["knowledge_graph"][item], inline=False)
+            except:
+              pass
+        return(em)
+    except:
+      pass
+  except:
+    pass
 async def google(arg1):
   def prettylink(link):
     if link[:4] != 'http':
@@ -1255,29 +1324,23 @@ async def Search(ctx, *, arg1):
       mothertext = await ctx.reply(f'<@{ctx.author.id}> Searching for answers...')
       embeds = []
       try:
-        await mothertext.edit(content='Sending query to Wolfram Alpha...')
         answerone = await great_wolfram(arg1, '@src')
         embeds.append(answerone)
       except:
-        await mothertext.edit(content='Wolfram Alpha failed, crawling Wikipedia...')
         pass
       try:
-        await mothertext.edit(content='Searching Wikipedia...')
         answertwo = await wikisearch_two(arg1)
         embeds.append(answertwo)
       except:
-        await mothertext.edit(content='Wikipedia failed, resorting to Google search results...')
         pass
       try:
-        await mothertext.edit(content='Scraping Google search results...')
-        answerthree = await google(arg1)
+        answerthree = await info_pullup(arg1)
         embeds.append(answerthree)
       except:
-        await mothertext.edit(content='All sources failed')
         pass
       await mothertext.delete()
 
-      if len(embeds) == 0:
+      if len(embeds) == 0 or embeds[0] == None:
         await ctx.reply('I could not find anything related to your query. Please try again with more specific keywords.')
         return
       else:
@@ -1293,6 +1356,65 @@ async def Search_error(ctx, error):
     await ctx.reply(f'Please specify the search term after the search command.\nExample: {get_prefix(client, ctx.message)}search y = 5x + 3')
   else:
     await ctx.reply('Something went wrong. Please try again :(')
+    raise error
+
+@client.command(aliases=['books', 'book'])
+async def Book(ctx, *, arg1):
+    url = "https://books17.p.rapidapi.com/works/title"
+
+    payload = {
+	  "cursor": 1,
+	  "title": arg1,
+	  "subtitle": False
+    }
+    headers = {
+	  "content-type": "application/json",
+	  "X-RapidAPI-Host": "books17.p.rapidapi.com",
+	  "X-RapidAPI-Key":     "7d9e769d83msh9cd7cee36149641p110f63jsn1edd3c89f7c2"
+    }
+
+    response = requests.request("POST", url, json=payload, headers=headers)
+
+    br = response.json()
+    templist = []
+    templist_two = []
+    for item in br["data"]:
+      if item["description"] != None:
+        templist.append(item)
+      else:
+        pass
+
+    if len(templist) != 0:
+      
+      v = templist[0]
+      btitle = v["title"]
+      desc = v["description"]
+      
+      em = discord.Embed(title=btitle, description=desc, color=random.choice(colors))
+      prettyprint = btitle.replace(' ', '+')
+      em.add_field(name='Link', value=f'https://www.google.com/search?tbm=bks&q={prettyprint.lower()}', inline=False)
+      await ctx.reply(embed=em)
+    else:
+      if len(br["data"]) == 0:
+        await ctx.reply('I could not find any books with the specified title')
+        return
+      else:
+        pass
+      for item in br["data"]:
+        templist_two.append(item["title"])
+      templist_two = list(dict.fromkeys(templist_two))
+      em = discord.Embed()
+      em.color = random.choice(colors)
+      em.title=f'Books with the title {arg1}'
+      for item in templist_two:
+        prettyprint = item.replace(' ', '+')
+        em.add_field(name=f'{templist_two.index(item)+1}. {item}', value=f'[Click here](https://www.google.com/search?tbm=bks&q={prettyprint})', inline=False)
+      await ctx.reply(embed=em)
+                
+@Book.error
+async def Book_error(ctx, error):
+  if isinstance(error, commands.MissingRequiredArgument):
+    await ctx.reply(f'Please specify the title of the book you want information for.\nExample: {get_prefix(client, ctx.message)}book Project Hail Mary')
 
 def gptneo(payload, message):
 
@@ -1320,14 +1442,10 @@ async def Prompt_error(ctx, error):
 
 @client.command(aliases=["updates"])
 async def Updates(ctx):
-  embedVar = discord.Embed(title="The Anew Update will be fully released soon!", description="New features and reworks will be shown here", color=random.choice(colors))
-  embedVar.add_field(name="Added pagination for a few commands!", value=f"Urban dictionary, google dictionary, launches and more now show multiple results which you can access using :arrow_backward: or :arrow_forward:", inline=False)
-  embedVar.add_field(name="Fixed the translation command", value="The bug causing the feature to fail when translating to English has been fixed.", inline=False)
-  embedVar.add_field(name="Rolled Radia and Erin into Iridia", value="Music and AI NLP features are now added to Iridia.", inline=False)
-  embedVar.add_field(name="Tidied up the help command", value="The help command now shows usage directions more clearly.", inline=False)
-  embedVar.add_field(name="More stable hosting", value="Iridia will be migrated to Heroku and MongoDB, reducing outages and latency.", inline=False)
-  embedVar.add_field(name="Small UI fixes and improvements", value="A few commands now have incremental but significant UI improvements.", inline=False)
-  embedVar.add_field(name="Added a feature to loop queues in the music player", value=f"{get_prefix(client, ctx.message)}loop queue", inline=False)
+  embedVar = discord.Embed(title="The AI update is here!", description="New features and reworks will be shown here", color=random.choice(colors))
+  embedVar.add_field(name="Fixed bugs related to book and loop commands", value="Both features will now function more reliably and looping the server queue is now enabled.", inline=False)
+  embedVar.add_field(name="Rolled Kestral into Iridia", value="You can now set a specific channel to talk to Iridia, -uh Kestral AI", inline=False)
+  embedVar.add_field(name="Improved the search feature.", value="Search feature now shows information from Google Answer Boxes.", inline=False)
   embedVar.set_thumbnail(url=client.user.avatar_url)
   await ctx.reply(embed=embedVar)
 
@@ -1397,7 +1515,6 @@ async def Mediaban(ctx, person: discord.Member):
     d.insert_one({"_id": str(person.id)})
     await ctx.reply(f'{person.name} is now banned from sending any videos and GIFs.')
   else:
-    d = mydb["banned"]
     d.delete_one({"_id": str(person.id)})
     await ctx.reply(f'{person.name} has been unbanned from sending media')
 
@@ -1459,66 +1576,6 @@ async def Roles_error(ctx, error):
     await ctx.reply(embed=rolese)
   else:
     await ctx.reply('I could not find the member you were specifying!')
-    
-@client.command(aliases=['books', 'book'])
-async def Book(ctx, *, arg1):
-    url = "https://books17.p.rapidapi.com/works/title"
-
-    payload = {
-	  "cursor": 1,
-	  "title": arg1,
-	  "subtitle": False
-    }
-    headers = {
-	  "content-type": "application/json",
-	  "X-RapidAPI-Host": "books17.p.rapidapi.com",
-	  "X-RapidAPI-Key":     "7d9e769d83msh9cd7cee36149641p110f63jsn1edd3c89f7c2"
-    }
-
-    response = requests.request("POST", url, json=payload, headers=headers)
-
-    br = response.json()
-    templist = []
-    templist_two = []
-    for item in br["data"]:
-      if item["description"] != None:
-        templist.append(item)
-      else:
-        pass
-
-    if len(templist) != 0:
-      
-      v = templist[0]
-      btitle = v["title"]
-      desc = v["description"]
-      
-      em = discord.Embed(title=btitle, description=desc, color=random.choice(colors))
-      prettyprint = btitle.replace(' ', '+')
-      em.add_field(name='Link', value=f'https://www.google.com/search?tbm=bks&q={prettyprint.lower()}', inline=False)
-      await ctx.reply(embed=em)
-    else:
-      if len(br["data"]) == 0:
-        await ctx.reply('I could not find any books with the specified title')
-        return
-      else:
-        pass
-      for item in br["data"]:
-        templist_two.append(item["title"])
-      templist_two = list(dict.fromkeys(templist_two))
-      em = discord.Embed()
-      em.color = random.choice(colors)
-      em.title=f'Books with the title {a[1]}'
-      for item in templist_two:
-        prettyprint = item.replace(' ', '+')
-        print(item)
-        em.add_field(name=f'{templist_two.index(item)+1}. {item}', value=f'[Click here](https://www.google.com/search?tbm=bks&q={prettyprint})', inline=False)
-      await ctx.reply(embed=em)
-                
-@Book.error
-async def Book_error(ctx, error):
-  if isinstance(error, commands.MissingRequiredArgument):
-    await ctx.reply(f'Please specify the title of the book you want information for.\nExample: {get_prefix(client, ctx.message)}book Project Hail Mary')
-  
 
 def prettytime(original):
   templist = original.split(":")
@@ -1696,8 +1753,8 @@ async def pplay(ctx, data):
           pass
   await loopa_two(ctx)
 
-loop_servers = []
 loop_queue_servers = []
+loop_servers = []
 
 async def loopa(ctx, data, voice):
   if str(ctx.guild.id) in loop_servers:
@@ -1735,7 +1792,7 @@ async def loopa_two(ctx):
       await pplay(ctx, d[str(ctx.guild.id)][0])
   else:
     pass
-
+    
 def link_check(url, a_link):
   res = requests.get(url, stream=True)
   if res.status_code == 200:
@@ -1843,7 +1900,7 @@ async def play(ctx, *, arg1):
                 await ctx.reply(f'I could not retrieve the audio tracks for `{item["title"]}` :(')
                 await tempremove(str(ctx.guild.id), item)
                 pass
-        await loopa_two(ctx)
+    await loopa_two(ctx)
   else:
     try:
       results = YoutubeSearch(arg1, max_results=10).to_dict()
@@ -1865,7 +1922,6 @@ async def play_error(ctx, error):
   await ctx.message.add_reaction('🎧')
   if isinstance(error, commands.CommandInvokeError):
     await ctx.reply(f'Add me to a voice channel by typing `{get_prefix(client, ctx.message)}join`.')
-    raise error
   elif isinstance(error, commands.MissingRequiredArgument):
     voice = get(client.voice_clients, guild=ctx.guild)
     if voice == None:
@@ -1909,6 +1965,14 @@ async def leave(ctx):
   await ctx.guild.voice_client.disconnect() 
   await delete(str(ctx.guild.id))
   await create(str(ctx.guild.id))
+  try:
+    loop_queue_servers.remove(str(ctx.guild.id))
+  except:
+    pass
+  try:
+    loop_servers.remove(str(ctx.guild.id))
+  except:
+    pass
   await ctx.reply(f'Disconnected from the voice channel.')
 
 @leave.error
@@ -2253,7 +2317,6 @@ async def playlist(ctx, arg1, *, arg2):
   if arg1 == 'add' and yeno == None:
     try:
       results = YoutubeSearch(arg2, max_results=10).to_dict()
-      print(results)
       a = results[0]
     except:
       await ctx.reply('I could not find any tracks with the specified keywords.')
@@ -2354,6 +2417,7 @@ async def playlist_error(ctx, error):
 
 @client.command(aliases=["command", "help", "Command"])
 async def Help(ctx):
+  ms = await ctx.send('Loading help page...')
   mynum = await client.fetch_user(746646972483502140)
   mypic = mynum.avatar_url
   myname = mynum.name
@@ -2364,9 +2428,9 @@ async def Help(ctx):
 
   embed3 = discord.Embed(title="Commands to access tools", description="Access essential tools with these commands!", color=random.choice(colors)).set_thumbnail(url=client.user.avatar_url).set_footer(icon_url=mypic, text=f'Bot created by {myname}').add_field(name="Ask the 8ball", value=f"`{get_prefix(client, ctx.message)}8ball`", inline=False).add_field(name="Flip a coin", value=f"`{get_prefix(client, ctx.message)}flip`", inline=False).add_field(name="Get a random number between 0 and a specified positive integer.", value=f"`{get_prefix(client, ctx.message)}random <min> <max>`", inline=False).add_field(name="Create a minute long poll in the chat", value=f"`{get_prefix(client, ctx.message)}vote <poll topic>`", inline=False).add_field(name="See your avatar or someone else's", value=f"`{get_prefix(client, ctx.message)}avatar <@someone>` or `{get_prefix(client, ctx.message)}avatar`", inline=False).add_field(name="Let Iridia choose something from a range of options", value=f"`{get_prefix(client, ctx.message)}choose <option1>,<option2>...`", inline=False).add_field(name="Find out how high the latency is", value=f"`{get_prefix(client, ctx.message)}ping`", inline=False).add_field(name="Get current time around the world", value=f'`{get_prefix(client, ctx.message)}clock` or `{get_prefix(client, ctx.message)}clock <city name>`', inline=False).add_field(name="Generate a story with AI and Natural Language Processing", value=f'`{get_prefix(client, ctx.message)}prompt <text>`', inline=False)
 
-  embed4 = discord.Embed(title="Commands to access productivity features", description="Be productive with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="View COVID-19 cases around the globe", value=f"`{get_prefix(client, ctx.message)}covid <country name>`", inline=False).add_field(name="Search for some information from the internet", value=f"`{get_prefix(client, ctx.message)}search <query>`", inline=False).add_field(name="Inspirational Quotes", value=f"`{get_prefix(client, ctx.message)}inspire`", inline=False).add_field(name="Get weather stats for a specific place", value=f"`{get_prefix(client, ctx.message)}weather <name of place>`", inline=False).add_field(name='Translate text to a specified language', value=f'`{get_prefix(client, ctx.message)}translate <language> <text to translate>`', inline=False).add_field(name="Set a timer", value=f"`{get_prefix(client, ctx.message)}timer <number> <time unit>`", inline=False).add_field(name="Calculator", value=f"`{get_prefix(client, ctx.message)}calc <maths equation>`", inline=False).add_field(name="Dictionary", value=f"`{get_prefix(client, ctx.message)}define <word>`", inline=False).add_field(name='Get an Orwellian quote', value=f'`{get_prefix(client, ctx.message)}orwell`', inline=False).add_field(name="Get book information", value="`{get_prefix(client, ctx.message)}book <book title>`", inline=False)
+  embed4 = discord.Embed(title="Commands to access productivity features", description="Be productive with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="View COVID-19 cases around the globe", value=f"`{get_prefix(client, ctx.message)}covid <country name>`", inline=False).add_field(name="Search for some information from the internet", value=f"`{get_prefix(client, ctx.message)}search <query>`", inline=False).add_field(name="Inspirational Quotes", value=f"`{get_prefix(client, ctx.message)}inspire`", inline=False).add_field(name="Get weather stats for a specific place", value=f"`{get_prefix(client, ctx.message)}weather <name of place>`", inline=False).add_field(name='Translate text to a specified language', value=f'`{get_prefix(client, ctx.message)}translate <language> <text to translate>`', inline=False).add_field(name="Set a timer", value=f"`{get_prefix(client, ctx.message)}timer <number> <time unit>`", inline=False).add_field(name="Calculator", value=f"`{get_prefix(client, ctx.message)}calc <maths equation>`", inline=False).add_field(name="Dictionary", value=f"`{get_prefix(client, ctx.message)}define <word>`", inline=False).add_field(name='Get an Orwellian quote', value=f'`{get_prefix(client, ctx.message)}orwell`', inline=False).add_field(name='Get info for a particular book', value=f"`{get_prefix(client, ctx.message)}book <title of book>`")
   
-  embed7 = discord.Embed(title="Commands to access bot info", description="Know bot information with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Default prefix", value='i', inline=False).add_field(name="Get an invite link for Iridia", value=f"`{get_prefix(client, ctx.message)}invite`", inline=False).add_field(name="View recent updates", value=f"`{get_prefix(client, ctx.message)}updates`", inline=False).add_field(name="View bot info", value=f"`{get_prefix(client, ctx.message)}bot`", inline=False)
+  embed7 = discord.Embed(title="Commands to access bot info", description="Know bot information with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Default prefix", value='i', inline=False).add_field(name="Get an invite link for Iridia", value=f"`{get_prefix(client, ctx.message)}invite`", inline=False).add_field(name="View recent updates", value=f"`{get_prefix(client, ctx.message)}updates`", inline=False).add_field(name="View bot info", value=f"`{get_prefix(client, ctx.message)}bot`", inline=False).add_field(name="Set a channel to talk to the Iridia AI", value=f"`{get_prefix(client, ctx.message)}chatbot <channel>`", inline=False)
 
   embed5 = discord.Embed(title="Server/mod commands for Iridia", description="Get important mod-based information and features with Iridia!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Ban members", value=f"`{get_prefix(client, ctx.message)}ban <@someone> <reason>`", inline=False).add_field(name="Kick members", value=f"`{get_prefix(client, ctx.message)}kick <@someone> <reason>`", inline=False).add_field(name="Get server information", value=f"`{get_prefix(client, ctx.message)}server`", inline=False).add_field(name="Clear Messages", value=f"`{get_prefix(client, ctx.message)}clear <amt of messages>`", inline=False).add_field(name="Get stats for your discord account or someone else's", value=f"`{get_prefix(client, ctx.message)}user` or `{get_prefix(client, ctx.message)}user <@someone>`", inline=False).add_field(name="Get information about your roles or someone else's", value=f"`{get_prefix(client, ctx.message)}iroles` or `{get_prefix(client, ctx.message)}roles <@someone>`", inline=False).add_field(name="Rename someone", value=f"`{get_prefix(client, ctx.message)}rename <@someone> <nickname>`", inline=False).add_field(name="Turn welcome messages on or off", value=f"`{get_prefix(client, ctx.message)}welcome <on/off>`", inline=False).add_field(name="Retrieve the last deleted message in your server", value=f"`{get_prefix(client, ctx.message)}snipe`", inline=False).add_field(name="Permanently ban someone from your server. This will override any attempts to revoke the ban via Discord's server settings.", value=f"`{get_prefix(client, ctx.message)}permaban <@someone>`", inline=False)
 
@@ -2374,15 +2438,17 @@ async def Help(ctx):
 
   embed9 = discord.Embed(title="Music commands 1", description="Vibe to your favourite tunes with Radia Music!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name= 'Join a voice channel',value = f'`{get_prefix(client, ctx.message)}join`', inline=False).add_field(name= 'Leave a voice channel',value = f'`{get_prefix(client, ctx.message)}leave`', inline=False).add_field(name= 'Play a specified song using the YouTube API. If no song is specified, I will play the server queue.',value = f'`{get_prefix(client, ctx.message)}play <song name>` or `{get_prefix(client, ctx.message)}play`', inline=False).add_field(name= 'Show the song being currently played.',value = f'`{get_prefix(client, ctx.message)}np`', inline=False).add_field(name= 'Skip to the next song in the queue',value = f'`{get_prefix(client, ctx.message)}skip`', inline=False).add_field(name= 'Get the lyrics of a song. If no song is specified, I will fetch the lyrics of the song being played.',value = f'`{get_prefix(client, ctx.message)}lyrics <song name>` or `{get_prefix(client, ctx.message)}lyrics`', inline=False).add_field(name= 'Pause the player',value = f'`{get_prefix(client, ctx.message)}pause`', inline=False).add_field(name= 'Resume the paused player',value = f'`{get_prefix(client, ctx.message)}resume`', inline=False)
 
-  embed10 = discord.Embed(title="Music commands 2", description="Vibe to your favourite tunes with Radia Music!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name= 'Show the server queue',value = f'`{get_prefix(client, ctx.message)}queue`', inline=False).add_field(name= 'Clear the server queue',value = f'`{get_prefix(client, ctx.message)}empty`', inline=False).add_field(name= 'Remove a song from the queue',value = f'`{get_prefix(client, ctx.message)}remove <index of song in queue>`', inline=False).add_field(name= 'Loop the song being played or the queue',value = f'For song: `{get_prefix(client, ctx.message)}loop`\nFor queue: `{get_prefix(client, ctx.message)}loop queue`', inline=False).add_field(name= 'Change the volume of the player',value = f'`{get_prefix(client, ctx.message)}volume <volume number>`', inline=False).add_field(name= 'View your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist view`', inline=False).add_field(name= 'Add songs to your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist add <song name>`', inline=False).add_field(name= 'Remove a song from your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist remove <index of song>`', inline=False).add_field(name= 'Add your personal playlist to the server queue',value = f'`{get_prefix(client, ctx.message)}playlist play`', inline=False)
+  embed10 = discord.Embed(title="Music commands 2", description="Vibe to your favourite tunes with Radia Music!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name= 'Show the server queue',value = f'`{get_prefix(client, ctx.message)}queue`', inline=False).add_field(name= 'Clear the server queue',value = f'`{get_prefix(client, ctx.message)}empty`', inline=False).add_field(name= 'Remove a song from the queue',value = f'`{get_prefix(client, ctx.message)}remove <index of song in queue>`', inline=False).add_field(name= 'Loop the song being played',value = f'`{get_prefix(client, ctx.message)}loop`', inline=False).add_field(name= 'Change the volume of the player',value = f'`{get_prefix(client, ctx.message)}volume <volume number>`', inline=False).add_field(name= 'View your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist view`', inline=False).add_field(name= 'Add songs to your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist add <song name>`', inline=False).add_field(name= 'Remove a song from your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist remove <index of song>`', inline=False).add_field(name= 'Add your personal playlist to the server queue',value = f'`{get_prefix(client, ctx.message)}playlist play`', inline=False)
   
   embeds = [embed1, embed2, embed3, embed4, embed5, embed7, embed8, embed9, embed10]
 
+  
   await ctx.send(f'<@!{ctx.author.id}>')
   paginator = BotEmbedPaginator(ctx, embeds)
+  await ms.delete()
   await paginator.run()
 
-iso = {'Abkhaz': 'ab', 'Afar': 'aa', 'Afrikaans': 'af', 'Akan': 'ak', 'Albanian': 'sq', 'Amharic': 'am', 'Arabic': 'ar', 'Aragonese': 'an', 'Armenian': 'hy', 'Assamese': 'as', 'Avaric': 'av', 'Avestan': 'ae', 'Aymara': 'ay', 'Azerbaijani': 'az', 'Bambara': 'bm', 'Bashkir': 'ba', 'Basque': 'eu', 'Belarusian': 'be', 'Bengali': 'bn', 'Bihari': 'bh', 'Bislama': 'bi', 'Bosnian': 'bs', 'Breton': 'br', 'Bulgarian': 'bg', 'Burmese': 'my', 'Catalan; Valencian': 'ca', 'Chamorro': 'ch', 'Chechen': 'ce', 'Chichewa; Chewa; Nyanja': 'ny', 'Chinese': 'zh-CN', 'Taiwanese': 'zh-TW', 'Chuvash': 'cv', 'Cornish': 'kw', 'Corsican': 'co', 'Cree': 'cr', 'Croatian': 'hr', 'Czech': 'cs', 'Danish': 'da', 'Divehi; Dhivehi; Maldivian;': 'dv', 'Dutch': 'nl', 'English': 'en', 'Esperanto': 'eo', 'Estonian': 'et', 'Ewe': 'ee', 'Faroese': 'fo', 'Fijian': 'fj', 'Finnish': 'fi', 'French': 'fr', 'Fula; Fulah; Pulaar; Pular': 'ff', 'Galician': 'gl', 'Georgian': 'ka', 'German': 'de', 'Greek, Modern': 'el', 'Guaraní': 'gn', 'Gujarati': 'gu', 'Haitian; Haitian Creole': 'ht', 'Hausa': 'ha', 'Hebrew (modern)': 'he', 'Herero': 'hz', 'Hindi': 'hi', 'Hiri Motu': 'ho', 'Hungarian': 'hu', 'Interlingua': 'ia', 'Indonesian': 'id', 'Interlingue': 'ie', 'Irish': 'ga', 'Igbo': 'ig', 'Inupiaq': 'ik', 'Ido': 'io', 'Icelandic': 'is', 'Italian': 'it', 'Inuktitut': 'iu', 'Japanese': 'ja', 'Javanese': 'jv', 'Kalaallisut, Greenlandic': 'kl', 'Kannada': 'kn', 'Kanuri': 'kr', 'Kashmiri': 'ks', 'Kazakh': 'kk', 'Khmer': 'km', 'Kikuyu, Gikuyu': 'ki', 'Kinyarwanda': 'rw', 'Kirghiz, Kyrgyz': 'ky', 'Komi': 'kv', 'Kongo': 'kg', 'Korean': 'ko', 'Kurdish': 'ku', 'Kwanyama, Kuanyama': 'kj', 'Latin': 'la', 'Luxembourgish, Letzeburgesch': 'lb', 'Luganda': 'lg', 'Limburgish, Limburgan, Limburger': 'li', 'Lingala': 'ln', 'Lao': 'lo', 'Lithuanian': 'lt', 'Luba-Katanga': 'lu', 'Latvian': 'lv', 'Manx': 'gv', 'Macedonian': 'mk', 'Malagasy': 'mg', 'Malay': 'ms', 'Malayalam': 'ml', 'Maltese': 'mt', 'Māori': 'mi', 'Marathi': 'mr', 'Marshallese': 'mh', 'Mongolian': 'mn', 'Nauru': 'na', 'Navajo, Navaho': 'nv', 'Norwegian Bokmål': 'nb', 'North Ndebele': 'nd', 'Nepali': 'ne', 'Ndonga': 'ng', 'Norwegian Nynorsk': 'nn', 'Norwegian': 'no', 'Nuosu': 'ii', 'South Ndebele': 'nr', 'Occitan': 'oc', 'Ojibwe, Ojibwa': 'oj', 'Old Church Slavonic, Church Slavic, Church Slavonic, Old Bulgarian, Old Slavonic': 'cu', 'Oromo': 'om', 'Oriya': 'or', 'Ossetian, Ossetic': 'os', 'Panjabi, Punjabi': 'pa', 'Pāli': 'pi', 'Persian': 'fa', 'Polish': 'pl', 'Pashto, Pushto': 'ps', 'Portuguese': 'pt', 'Quechua': 'qu', 'Romansh': 'rm', 'Kirundi': 'rn', 'Romanian, Moldavian, Moldovan': 'ro', 'Russian': 'ru', 'Sanskrit': 'sa', 'Sardinian': 'sc', 'Sindhi': 'sd', 'Northern Sami': 'se', 'Samoan': 'sm', 'Sango': 'sg', 'Serbian': 'sr', 'Scottish Gaelic; Gaelic': 'gd', 'Shona': 'sn', 'Sinhala, Sinhalese': 'si', 'Slovak': 'sk', 'Slovene': 'sl', 'Somali': 'so', 'Southern Sotho': 'st', 'Spanish; Castilian': 'es', 'Sundanese': 'su', 'Swahili': 'sw', 'Swati': 'ss', 'Swedish': 'sv', 'Tamil': 'ta', 'Telugu': 'te', 'Tajik': 'tg', 'Thai': 'th', 'Tigrinya': 'ti', 'Tibetan Standard, Tibetan, Central': 'bo', 'Turkmen': 'tk', 'Tagalog': 'tl', 'Tswana': 'tn', 'Tonga': 'to', 'Turkish': 'tr', 'Tsonga': 'ts', 'Tatar': 'tt', 'Twi': 'tw', 'Tahitian': 'ty', 'Uyghur': 'ug', 'Ukrainian': 'uk', 'Urdu': 'ur', 'Uzbek': 'uz', 'Venda': 've', 'Vietnamese': 'vi', 'Volapük': 'vo', 'Walloon': 'wa', 'Welsh': 'cy', 'Wolof': 'wo', 'Western Frisian': 'fy', 'Xhosa': 'xh', 'Yiddish': 'yi', 'Yoruba': 'yo', 'Zhuang, Chuang': 'za'}
+iso = {'Abkhaz': 'ab', 'Afar': 'aa', 'Afrikaans': 'af', 'Akan': 'ak', 'Albanian': 'sq', 'Amharic': 'am', 'Arabic': 'ar', 'Aragonese': 'an', 'Armenian': 'hy', 'Assamese': 'as', 'Avaric': 'av', 'Avestan': 'ae', 'Aymara': 'ay', 'Azerbaijani': 'az', 'Bambara': 'bm', 'Bashkir': 'ba', 'Basque': 'eu', 'Belarusian': 'be', 'Bengali': 'bn', 'Bihari': 'bh', 'Bislama': 'bi', 'Bosnian': 'bs', 'Breton': 'br', 'Bulgarian': 'bg', 'Burmese': 'my', 'Valencian': 'ca', 'Chamorro': 'ch', 'Chechen': 'ce', 'Chichewa; Chewa; Nyanja': 'ny', 'Chinese': 'zh-CN', 'Taiwanese': 'zh-TW', 'Chuvash': 'cv', 'Cornish': 'kw', 'Corsican': 'co', 'Cree': 'cr', 'Croatian': 'hr', 'Czech': 'cs', 'Danish': 'da', 'Divehi; Dhivehi; Maldivian;': 'dv', 'Dutch': 'nl', 'English': 'en', 'Esperanto': 'eo', 'Estonian': 'et', 'Ewe': 'ee', 'Faroese': 'fo', 'Fijian': 'fj', 'Finnish': 'fi', 'French': 'fr', 'Fula; Fulah; Pulaar; Pular': 'ff', 'Galician': 'gl', 'Georgian': 'ka', 'German': 'de', 'Greek, Modern': 'el', 'Guaraní': 'gn', 'Gujarati': 'gu', 'Haitian; Haitian Creole': 'ht', 'Hausa': 'ha', 'Hebrew (modern)': 'he', 'Herero': 'hz', 'Hindi': 'hi', 'Hiri Motu': 'ho', 'Hungarian': 'hu', 'Interlingua': 'ia', 'Indonesian': 'id', 'Interlingue': 'ie', 'Irish': 'ga', 'Igbo': 'ig', 'Inupiaq': 'ik', 'Ido': 'io', 'Icelandic': 'is', 'Italian': 'it', 'Inuktitut': 'iu', 'Japanese': 'ja', 'Javanese': 'jv', 'Kalaallisut, Greenlandic': 'kl', 'Kannada': 'kn', 'Kanuri': 'kr', 'Kashmiri': 'ks', 'Kazakh': 'kk', 'Khmer': 'km', 'Kikuyu, Gikuyu': 'ki', 'Kinyarwanda': 'rw', 'Kirghiz, Kyrgyz': 'ky', 'Komi': 'kv', 'Kongo': 'kg', 'Korean': 'ko', 'Kurdish': 'ku', 'Kwanyama, Kuanyama': 'kj', 'Latin': 'la', 'Luxembourgish, Letzeburgesch': 'lb', 'Luganda': 'lg', 'Limburgish, Limburgan, Limburger': 'li', 'Lingala': 'ln', 'Lao': 'lo', 'Lithuanian': 'lt', 'Luba-Katanga': 'lu', 'Latvian': 'lv', 'Manx': 'gv', 'Macedonian': 'mk', 'Malagasy': 'mg', 'Malay': 'ms', 'Malayalam': 'ml', 'Maltese': 'mt', 'Māori': 'mi', 'Marathi': 'mr', 'Marshallese': 'mh', 'Mongolian': 'mn', 'Nauru': 'na', 'Navajo, Navaho': 'nv', 'Norwegian Bokmål': 'nb', 'North Ndebele': 'nd', 'Nepali': 'ne', 'Ndonga': 'ng', 'Norwegian Nynorsk': 'nn', 'Norwegian': 'no', 'Nuosu': 'ii', 'South Ndebele': 'nr', 'Occitan': 'oc', 'Ojibwe, Ojibwa': 'oj', 'Oromo': 'om', 'Oriya': 'or', 'Ossetian, Ossetic': 'os', 'Panjabi, Punjabi': 'pa', 'Pāli': 'pi', 'Persian': 'fa', 'Polish': 'pl', 'Pashto, Pushto': 'ps', 'Portuguese': 'pt', 'Quechua': 'qu', 'Romansh': 'rm', 'Kirundi': 'rn', 'Romanian, Moldavian, Moldovan': 'ro', 'Russian': 'ru', 'Sanskrit': 'sa', 'Sardinian': 'sc', 'Sindhi': 'sd', 'Northern Sami': 'se', 'Samoan': 'sm', 'Sango': 'sg', 'Serbian': 'sr', 'Scottish Gaelic; Gaelic': 'gd', 'Shona': 'sn', 'Sinhala, Sinhalese': 'si', 'Slovak': 'sk', 'Slovene': 'sl', 'Somali': 'so', 'Southern Sotho': 'st', 'Spanish; Castilian': 'es', 'Sundanese': 'su', 'Swahili': 'sw', 'Swati': 'ss', 'Swedish': 'sv', 'Tamil': 'ta', 'Telugu': 'te', 'Tajik': 'tg', 'Thai': 'th', 'Tigrinya': 'ti', 'Tibetan Standard, Tibetan, Central': 'bo', 'Turkmen': 'tk', 'Tagalog': 'tl', 'Tswana': 'tn', 'Tonga': 'to', 'Turkish': 'tr', 'Tsonga': 'ts', 'Tatar': 'tt', 'Twi': 'tw', 'Tahitian': 'ty', 'Uyghur': 'ug', 'Ukrainian': 'uk', 'Urdu': 'ur', 'Uzbek': 'uz', 'Venda': 've', 'Vietnamese': 'vi', 'Volapük': 'vo', 'Walloon': 'wa', 'Welsh': 'cy', 'Wolof': 'wo', 'Western Frisian': 'fy', 'Xhosa': 'xh', 'Yiddish': 'yi', 'Yoruba': 'yo', 'Zhuang, Chuang': 'za'}
 
 translator = Translator()
 
@@ -2419,4 +2485,28 @@ async def Translate_error(ctx, error):
   elif isinstance(error, commands.CommandInvokeError):
     await ctx.reply('I could not translate the given text to the specified language.')
 
+@client.command(aliases=['chat', 'chatbot'])
+async def Chatbot(ctx):
+  chan = ctx.message.channel_mentions
+  if len(chan) == 0:
+    await ctx.send(f'Please mention a channel!\nExample: {get_prefix(client, ctx.message)}chatbot #talk-to-iridia-alone')
+  else:
+    chatchan = chan[0]
+    if str(chatchan.type) == 'text':
+      
+      filea = mydb["chatbot_info"]
+      try:
+        filea.insert_one({"_id": ctx.guild.id, "channel_id": chatchan.id})
+      except:
+        filea.update_one({"_id": ctx.guild.id}, {"$set": {"channel_id": chatchan.id}})
+      await ctx.send(f'AI chatbot channel set to {chatchan}.')
+      await chatchan.send("Hiya, I'm here!")
+    else:
+      await ctx.send('I can only talk in text channels. Please specify a valid text channel.')
+
+@Chatbot.error
+async def Chatbot_error(ctx, error):
+  if isinstance(error, commands.CommandInvokeError):
+    await ctx.send(f'Please mention a valid text channel!\nExample: {get_prefix(client, ctx.message)}chatbot #talk-to-iridia-alone')
+  
 client.run('ODQ5ODQxMTQ2Mjg0NzM2NTEy.YLhCPg.cNEkmsxRo-1TvWVvSM2ERggmX5c')
