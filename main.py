@@ -1443,8 +1443,8 @@ async def Prompt_error(ctx, error):
 
 @client.command(aliases=["updates"])
 async def Updates(ctx):
-  embedVar = discord.Embed(title="The AI update is here!", description="New features and reworks will be shown here", color=random.choice(colors))
-  embedVar.add_field(name="Fixed bugs related to book and loop commands", value="Both features will now function more reliably and looping the server queue is now enabled.", inline=False)
+  embedVar = discord.Embed(title="The ImageSuite update is here!", description="New features and reworks will be shown here", color=random.choice(colors))
+  embedVar.add_field(name="Added features to rotate, sharpen and change the contrast of images!", value="Access the commands by referring to page 10 of the help page.", inline=False)
   embedVar.add_field(name="Rolled Kestral into Iridia", value="You can now set a specific channel to talk to Iridia, -uh Kestral AI", inline=False)
   embedVar.add_field(name="Improved the search feature.", value="Search feature now shows information from Google Answer Boxes.", inline=False)
   embedVar.set_thumbnail(url=client.user.avatar_url)
