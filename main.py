@@ -19,6 +19,7 @@ from discord import FFmpegPCMAudio
 from lyrics_extractor import SongLyrics
 from youtube_dl import YoutubeDL
 import pymongo
+from imagesuite import resize_img, flip_img, sharpen_img, contrast_img, all_things_bright_and_beautiful, rotate_image
 
 
 mongoclient = pymongo.MongoClient("mongodb+srv://davidswsim:ds2wds2w@ds2w-clusters.7sbca.mongodb.net/DS2W-Clusters?retryWrites=true&w=majority")
@@ -2415,6 +2416,94 @@ async def playlist_error(ctx, error):
     await ctx.reply('Something went wrong. Please try again.')
 
 
+async def error_em(ctx, title, imgur):
+  embed = discord.Embed(title=title, description='Example usage', color=random.choice(colors))
+  embed.set_image(url=imgur)
+  await ctx.reply(embed=embed)
+
+@client.command(aliases=['Rotate'])
+async def rotate(ctx, arg2):
+  reply_msg = await ctx.message.channel.fetch_message(ctx.message.reference.message_id)
+  if int(arg2) < 1 or int(arg2) > 360:
+    await ctx.send('The angle specified must be between 1 and 360!')
+    return
+  else:
+    pass
+  await rotate_image(ctx, reply_msg, arg2)
+
+
+@client.command(aliases = ['Flip'])
+async def flip(ctx):
+  arg1 = ctx.message.content.split(' ')
+  if len(arg1) < 2:
+    arg2 = None
+  else:
+    arg2 = arg1[1]
+  reply_msg = await ctx.message.channel.fetch_message(ctx.message.reference.message_id)
+  await flip_img(ctx, reply_msg, arg2)
+    
+
+@flip.error
+async def flip_error(ctx, error):
+  embed = discord.Embed(title='Please reply to an image with the iflip command and specify the orientation.', description='Example usage', color=random.choice(colors))
+  embed.set_image(url='https://imgur.com/9vLwRG7.png')
+  await ctx.reply(embed=embed)
+
+@client.command(aliases = ['Resize'])
+async def resize(ctx, arg1, arg2):
+  reply_msg = await ctx.message.channel.fetch_message(ctx.message.reference.message_id)
+  await resize_img(ctx, reply_msg, arg1, arg2)
+
+@resize.error
+async def resize_error(ctx, error):
+  await error_em(ctx, 'Please reply to an image with the iresize command and specify the orientation. (vertical/horizontal)', 'https://imgur.com/NRNJCHR.png')
+
+
+@client.command(aliases = ['Sharp', 'sharpen', 'Sharpen'])
+async def sharp(ctx, arg1):
+  if int(arg1) < -100 or int(arg1) > 100:
+    await ctx.send('The number specified must be between -100 and 100!')
+    return
+  else:
+    pass
+  reply_msg = await ctx.message.channel.fetch_message(ctx.message.reference.message_id)
+  await sharpen_img(ctx, reply_msg, arg1)
+
+@sharp.error
+async def sharpen_error(ctx, error):
+  await error_em(ctx, 'Please reply to an image with the isharpen command and specify the degree of sharpness desired. (must be between -100 and 100)', 'https://imgur.com/UlZSzuO.png')
+
+@client.command(aliases = ['Contrast'])
+async def contrast(ctx, arg1):
+  reply_msg = await ctx.message.channel.fetch_message(ctx.message.reference.message_id)
+
+  if int(arg1) < -100 or int(arg1) > 100:
+    await ctx.send('The number specified must be between -100 and 100!')
+    return
+  else:
+    pass
+  await contrast_img(ctx, reply_msg, arg1)
+
+@contrast.error
+async def contrast_error(ctx, error):
+  await error_em(ctx, 'Please reply to an image with the icontrast command and specify the degree of colour contrast desired. (degree must be between -100 and 100)', 'https://imgur.com/IE9UACd.png')
+
+@client.command(aliases = ['Brightness', 'bright', 'atbab', 'all_things_bright_and_beautiful'])
+async def brightness(ctx, arg1):
+  reply_msg = await ctx.message.channel.fetch_message(ctx.message.reference.message_id)
+
+  if int(arg1) < -100 or int(arg1) > 100:
+    await ctx.send('The number specified must be between -100 and 100!')
+    return
+  else:
+    pass
+  await all_things_bright_and_beautiful(ctx, reply_msg, arg1)
+
+@brightness.error
+async def bright_error(ctx, error):
+  await error_em(ctx, 'Please reply to an image with the ibrightness command and specify the degree of lighting change. (degree must be between -100 and 100)', 'https://imgur.com/HjZqkIc.png')
+
+
 @client.command(aliases=["command", "help", "Command"])
 async def Help(ctx):
   ms = await ctx.send('Loading help page...')
@@ -2422,7 +2511,7 @@ async def Help(ctx):
   mypic = mynum.avatar_url
   myname = mynum.name
 
-  embed1 = discord.Embed(title="Command List Categories", description="A list of commands to talk to Iridia!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Prefix", value='i', inline=False).add_field(name='Server prefix', value=get_prefix(client, ctx.message), inline=False).add_field(name="Jokes/Fun", value="`pg 2`", inline=False).add_field(name="Tools", value="`pg 3`", inline=False).add_field(name="Productivity", value="`pg 4`", inline=False).add_field(name="Mod/Server", value="`pg 5`", inline=False).add_field(name="Bot", value="`pg 6`", inline=False).add_field(name="SpaceX", value="`pg 7`", inline=False).add_field(name="Music Commands 1", value="`pg 8`", inline=False).add_field(name="Music Commands 2", value="`pg 9`", inline=False)
+  embed1 = discord.Embed(title="Command List Categories", description="A list of commands to talk to Iridia!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Prefix", value='i', inline=False).add_field(name='Server prefix', value=get_prefix(client, ctx.message), inline=False).add_field(name="Jokes/Fun", value="`pg 2`", inline=False).add_field(name="Tools", value="`pg 3`", inline=False).add_field(name="Productivity", value="`pg 4`", inline=False).add_field(name="Mod/Server", value="`pg 5`", inline=False).add_field(name="Bot", value="`pg 6`", inline=False).add_field(name="SpaceX", value="`pg 7`", inline=False).add_field(name="Music Commands 1", value="`pg 8`", inline=False).add_field(name="Music Commands 2", value="`pg 9`", inline=False).add_field(name="Image Editing Commands", value="`pg 10`", inline=False)
 
   embed2 = discord.Embed(title="Fun-themed Commands", description="A list of commands to talk have some fun with Iridia!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Get insulted", value=f"`{get_prefix(client, ctx.message)}insult`", inline=False).add_field(name="Get a meme", value=f"`{get_prefix(client, ctx.message)}meme`", inline=False).add_field(name="Get a Star Wars line", value=f"`{get_prefix(client, ctx.message)}starwars`", inline=False).add_field(name="Shipping Service", value=f"`{get_prefix(client, ctx.message)}ship`", inline=False).add_field(name="Roll a dice", value=f'`{get_prefix(client, ctx.message)}dice`', inline=False).add_field(name="Throw a paper plane with friend or by yourself", value=f"`{get_prefix(client, ctx.message)}plane` or `{get_prefix(client, ctx.message)}plane <@someone>`").add_field(name="Doom a friend or enemy", value=f'`{get_prefix(client, ctx.message)}tragic` or `{get_prefix(client, ctx.message)}tragic <@someone>`', inline=False).add_field(name="Get facts about animals", value=f"`{get_prefix(client, ctx.message)}fact`", inline=False).add_field(name="Flip messages", value=f'`{get_prefix(client, ctx.message)}fliptext <text>`', inline=False).add_field(name="Reverse text", value=f'`{get_prefix(client, ctx.message)}reverse <text>`', inline=False).add_field(name="Get Urban Dictionary definitions", value=f'`{get_prefix(client, ctx.message)}urban <word>`', inline=False)
 
@@ -2430,7 +2519,7 @@ async def Help(ctx):
 
   embed4 = discord.Embed(title="Commands to access productivity features", description="Be productive with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="View COVID-19 cases around the globe", value=f"`{get_prefix(client, ctx.message)}covid <country name>`", inline=False).add_field(name="Search for some information from the internet", value=f"`{get_prefix(client, ctx.message)}search <query>`", inline=False).add_field(name="Inspirational Quotes", value=f"`{get_prefix(client, ctx.message)}inspire`", inline=False).add_field(name="Get weather stats for a specific place", value=f"`{get_prefix(client, ctx.message)}weather <name of place>`", inline=False).add_field(name='Translate text to a specified language', value=f'`{get_prefix(client, ctx.message)}translate <language> <text to translate>`', inline=False).add_field(name="Set a timer", value=f"`{get_prefix(client, ctx.message)}timer <number> <time unit>`", inline=False).add_field(name="Calculator", value=f"`{get_prefix(client, ctx.message)}calc <maths equation>`", inline=False).add_field(name="Dictionary", value=f"`{get_prefix(client, ctx.message)}define <word>`", inline=False).add_field(name='Get an Orwellian quote', value=f'`{get_prefix(client, ctx.message)}orwell`', inline=False).add_field(name='Get info for a particular book', value=f"`{get_prefix(client, ctx.message)}book <title of book>`")
   
-  embed7 = discord.Embed(title="Commands to access bot info", description="Know bot information with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Default prefix", value='i', inline=False).add_field(name="Get an invite link for Iridia", value=f"`{get_prefix(client, ctx.message)}invite`", inline=False).add_field(name="View recent updates", value=f"`{get_prefix(client, ctx.message)}updates`", inline=False).add_field(name="View bot info", value=f"`{get_prefix(client, ctx.message)}bot`", inline=False).add_field(name="Set a channel to talk to the Iridia AI", value=f"`{get_prefix(client, ctx.message)}chatbot <channel>`", inline=False).add_field(name="Get to know the people behind this project", value=f'{get_prefix(client, ctx.message)}credits', inline=False)
+  embed7 = discord.Embed(title="Commands to access bot info", description="Know bot information with these commands!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Default prefix", value='i', inline=False).add_field(name="Get an invite link for Iridia", value=f"`{get_prefix(client, ctx.message)}invite`", inline=False).add_field(name="View recent updates", value=f"`{get_prefix(client, ctx.message)}updates`", inline=False).add_field(name="View bot info", value=f"`{get_prefix(client, ctx.message)}bot`", inline=False).add_field(name="Set a channel to talk to the Iridia AI", value=f"`{get_prefix(client, ctx.message)}chatbot <channel>`", inline=False)
 
   embed5 = discord.Embed(title="Server/mod commands for Iridia", description="Get important mod-based information and features with Iridia!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name="Ban members", value=f"`{get_prefix(client, ctx.message)}ban <@someone> <reason>`", inline=False).add_field(name="Kick members", value=f"`{get_prefix(client, ctx.message)}kick <@someone> <reason>`", inline=False).add_field(name="Get server information", value=f"`{get_prefix(client, ctx.message)}server`", inline=False).add_field(name="Clear Messages", value=f"`{get_prefix(client, ctx.message)}clear <amt of messages>`", inline=False).add_field(name="Get stats for your discord account or someone else's", value=f"`{get_prefix(client, ctx.message)}user` or `{get_prefix(client, ctx.message)}user <@someone>`", inline=False).add_field(name="Get information about your roles or someone else's", value=f"`{get_prefix(client, ctx.message)}iroles` or `{get_prefix(client, ctx.message)}roles <@someone>`", inline=False).add_field(name="Rename someone", value=f"`{get_prefix(client, ctx.message)}rename <@someone> <nickname>`", inline=False).add_field(name="Turn welcome messages on or off", value=f"`{get_prefix(client, ctx.message)}welcome <on/off>`", inline=False).add_field(name="Retrieve the last deleted message in your server", value=f"`{get_prefix(client, ctx.message)}snipe`", inline=False).add_field(name="Permanently ban someone from your server. This will override any attempts to revoke the ban via Discord's server settings.", value=f"`{get_prefix(client, ctx.message)}permaban <@someone>`", inline=False)
 
@@ -2439,8 +2528,10 @@ async def Help(ctx):
   embed9 = discord.Embed(title="Music commands 1", description="Vibe to your favourite tunes with Radia Music!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name= 'Join a voice channel',value = f'`{get_prefix(client, ctx.message)}join`', inline=False).add_field(name= 'Leave a voice channel',value = f'`{get_prefix(client, ctx.message)}leave`', inline=False).add_field(name= 'Play a specified song using the YouTube API. If no song is specified, I will play the server queue.',value = f'`{get_prefix(client, ctx.message)}play <song name>` or `{get_prefix(client, ctx.message)}play`', inline=False).add_field(name= 'Show the song being currently played.',value = f'`{get_prefix(client, ctx.message)}np`', inline=False).add_field(name= 'Skip to the next song in the queue',value = f'`{get_prefix(client, ctx.message)}skip`', inline=False).add_field(name= 'Get the lyrics of a song. If no song is specified, I will fetch the lyrics of the song being played.',value = f'`{get_prefix(client, ctx.message)}lyrics <song name>` or `{get_prefix(client, ctx.message)}lyrics`', inline=False).add_field(name= 'Pause the player',value = f'`{get_prefix(client, ctx.message)}pause`', inline=False).add_field(name= 'Resume the paused player',value = f'`{get_prefix(client, ctx.message)}resume`', inline=False)
 
   embed10 = discord.Embed(title="Music commands 2", description="Vibe to your favourite tunes with Radia Music!", color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name= 'Show the server queue',value = f'`{get_prefix(client, ctx.message)}queue`', inline=False).add_field(name= 'Clear the server queue',value = f'`{get_prefix(client, ctx.message)}empty`', inline=False).add_field(name= 'Remove a song from the queue',value = f'`{get_prefix(client, ctx.message)}remove <index of song in queue>`', inline=False).add_field(name= 'Loop the song being played',value = f'`{get_prefix(client, ctx.message)}loop`', inline=False).add_field(name= 'Change the volume of the player',value = f'`{get_prefix(client, ctx.message)}volume <volume number>`', inline=False).add_field(name= 'View your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist view`', inline=False).add_field(name= 'Add songs to your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist add <song name>`', inline=False).add_field(name= 'Remove a song from your personal playlist',value = f'`{get_prefix(client, ctx.message)}playlist remove <index of song>`', inline=False).add_field(name= 'Add your personal playlist to the server queue',value = f'`{get_prefix(client, ctx.message)}playlist play`', inline=False)
+
+  embed11 = discord.Embed(title='Image editing commands', description='Edit photos with Iridia ImageSuite!', color=random.choice(colors)).set_footer(icon_url=mypic, text=f'Bot created by {myname}').set_thumbnail(url=client.user.avatar_url).add_field(name='Adjust the sharpness of an image', value=f'`{get_prefix(client, ctx.message)}sharpen <value>` or `{get_prefix(client, ctx.message)}sharp <value>`', inline=False).add_field(name='Change the brightness of an image', value=f'`{get_prefix(client, ctx.message)}brightness <value>`', inline=False).add_field(name=f'Change the contrast of an image', value=f'`{get_prefix(client, ctx.message)}contrast <value>`', inline=False).add_field(name='Flip an image', value=f'`{get_prefix(client, ctx.message)}flip <vertical/horizontal>`', inline=False).add_field(name='Rotate an image', value=f'`{get_prefix(client, ctx.message)}rotate <value>`', inline=False).add_field(name='Resize an image', value=f'`{get_prefix(client, ctx.message)}resize <length> <width>`', inline=False)
   
-  embeds = [embed1, embed2, embed3, embed4, embed5, embed7, embed8, embed9, embed10]
+  embeds = [embed1, embed2, embed3, embed4, embed5, embed7, embed8, embed9, embed10, embed11]
 
   
   await ctx.send(f'<@!{ctx.author.id}>')
@@ -2508,13 +2599,5 @@ async def Chatbot(ctx):
 async def Chatbot_error(ctx, error):
   if isinstance(error, commands.CommandInvokeError):
     await ctx.send(f'Please mention a valid text channel!\nExample: {get_prefix(client, ctx.message)}chatbot #talk-to-iridia-alone')
-
-@client.command(aliases=['credits'])
-async def Credits(ctx):
-	me = await client.fetch_user(746646972483502140)
-	jec = await client.fetch_user(650338094645772318)
-	ivan = await client.fetch_user(762190577893638184)
-	em = discord.Embed(title='Contributors in the Iridia Project', description=f"This chatbot was predominantly coded by {me}. \nA shoutout to {jec} for designing Iridia's profile picture and {ivan} for inspiring the creation of this project.", color=random.choice(colors))
-	await ctx.send(embed=em)
-	
-client.run('ODQ5ODQxMTQ2Mjg0NzM2NTEy.YLhCPg.cNEkmsxRo-1TvWVvSM2ERggmX5c')
+  
+client.run('OTM4NjgwMzY1MzIzODAwNjM3.Yft0Ng.6Iw_a97iB91-5j5EpmYhm7uhGLw')
