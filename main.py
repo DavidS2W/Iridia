@@ -2600,4 +2600,5 @@ async def Chatbot_error(ctx, error):
   if isinstance(error, commands.CommandInvokeError):
     await ctx.send(f'Please mention a valid text channel!\nExample: {get_prefix(client, ctx.message)}chatbot #talk-to-iridia-alone')
   
-client.run('OTM4NjgwMzY1MzIzODAwNjM3.Yft0Ng.6Iw_a97iB91-5j5EpmYhm7uhGLw')
+client.run('ODQ5ODQxMTQ2Mjg0NzM2NTEy.YLhCPg.cNEkmsxRo-1TvWVvSM2ERggmX5c')
+
