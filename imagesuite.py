@@ -100,7 +100,7 @@ async def contrast_img(ctx, reply_msg, arg1):
     if int(arg1) > 1:
       await ctx.reply(f'Changed the contrast of {filea} by {int(arg1)}%')
     else:
-      await ctx.reply(f'Changed the contrast of {filea} by -{int(arg1)}%')
+      await ctx.reply(f'Changed the contrast of {filea} by {int(arg1)}%')
     await ctx.send(file=discord.File(fp=image_binary, filename=f'{filea}'))
 
 async def all_things_bright_and_beautiful(ctx, reply_msg, arg1):
