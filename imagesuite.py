@@ -138,7 +138,7 @@ async def rotate_image(ctx, reply_msg, arg2):
     print(atch)
     response  = requests.get(atch.url)
     img_pil = Image.open(BytesIO(response.content))
-    img_edited = img_pil.rotate(int(arg2))
+    img_edited = img_pil.rotate(int(arg2), expand=1)
 
 
     with BytesIO() as image_binary:
