@@ -586,8 +586,7 @@ async def Avatar_error(ctx, error):
     await ctx.reply(ctx.author.avatar_url)
 
 @client.command(aliases=['user'])
-async def User(ctx):
-  person = ctx.message.mentions[0]
+async def User(ctx, person: discord.User):
   person_embed=discord.Embed(title=person.name, description=f'ID: {person.id}', color=random.choice(colors))
   person_embed.set_thumbnail(url=person.avatar_url)
   person_embed.add_field(name='Created on:', value=person.created_at.__format__('%A, %d %B %Y' + '\n' '%H:%M:%S'), inline=False)
