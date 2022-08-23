@@ -2601,5 +2601,5 @@ async def Chatbot_error(ctx, error):
     await ctx.send(f'Please mention a valid text channel!\nExample: {get_prefix(client, ctx.message)}chatbot #talk-to-iridia-alone')
   
 	
-client.run(os.environ['BOT_TOKEN'])
+client.run(os.environ.get('BOT_TOKEN'))
 
