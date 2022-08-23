@@ -19,6 +19,7 @@ from discord import FFmpegPCMAudio
 from lyrics_extractor import SongLyrics
 from youtube_dl import YoutubeDL
 import pymongo
+import os 
 from imagesuite import resize_img, flip_img, sharpen_img, contrast_img, all_things_bright_and_beautiful, rotate_image
 
 
@@ -2599,5 +2600,6 @@ async def Chatbot_error(ctx, error):
   if isinstance(error, commands.CommandInvokeError):
     await ctx.send(f'Please mention a valid text channel!\nExample: {get_prefix(client, ctx.message)}chatbot #talk-to-iridia-alone')
   
-client.run('ODQ5ODQxMTQ2Mjg0NzM2NTEy.YLhCPg.cNEkmsxRo-1TvWVvSM2ERggmX5c')
+	
+client.run(os.environ['BOT_TOKEN'])
 
